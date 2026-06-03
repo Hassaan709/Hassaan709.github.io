@@ -1,1 +1,2833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Board Games - Multiplayer</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
 
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: #0d0d1a;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: #e8e8e8;
+  touch-action: manipulation;
+}
+
+.page {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.page.active {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.bg-pattern {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.03;
+  background-image: 
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.3) 1px, transparent 1px),
+    radial-gradient(circle at 80% 80%, rgba(255,255,255,0.3) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+h1 {
+  text-align: center;
+  font-size: 2em;
+  margin-bottom: 6px;
+  font-weight: 300;
+  letter-spacing: 3px;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.subtitle {
+  text-align: center;
+  color: #777;
+  margin-bottom: 30px;
+  font-size: 0.85em;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  margin: 8px auto;
+  padding: 16px 24px;
+  border: 1px solid #333;
+  border-radius: 14px;
+  font-size: 1em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s;
+  text-align: center;
+  color: #fff;
+  background: #1e1e2e;
+  position: relative;
+  overflow: hidden;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.btn:hover {
+  background: #252540;
+  border-color: #444;
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: #fff;
+  color: #1a1a2e;
+  border-color: #fff;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background: #e0e0e0;
+  border-color: #e0e0e0;
+}
+
+.btn-success {
+  background: #1e1e2e;
+  color: #4ade80;
+  border-color: #4ade80;
+}
+
+.btn-success:hover {
+  background: #4ade80;
+  color: #1a1a2e;
+}
+
+.btn-warning {
+  background: #1e1e2e;
+  color: #fbbf24;
+  border-color: #fbbf24;
+}
+
+.btn-warning:hover {
+  background: #fbbf24;
+  color: #1a1a2e;
+}
+
+.btn-info {
+  background: #1e1e2e;
+  color: #60a5fa;
+  border-color: #60a5fa;
+}
+
+.btn-info:hover {
+  background: #60a5fa;
+  color: #1a1a2e;
+}
+
+.btn-danger {
+  background: #1e1e2e;
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+.btn-danger:hover {
+  background: #ef4444;
+  color: #1a1a2e;
+}
+
+.btn-small {
+  padding: 12px 20px;
+  font-size: 0.9em;
+  max-width: 220px;
+  margin: 6px auto;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.game-card {
+  background: #1a1a2e;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 10px auto;
+  max-width: 300px;
+  border: 1px solid #2a2a4a;
+  cursor: pointer;
+  transition: all 0.25s;
+  width: 100%;
+  text-align: left;
+}
+
+.game-card:hover {
+  border-color: #444;
+  background: #1e1e35;
+  transform: translateY(-2px);
+}
+
+.game-card:active {
+  transform: scale(0.98);
+}
+
+.game-card h3 {
+  color: #fff;
+  margin-bottom: 6px;
+  font-size: 1.15em;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.game-card p {
+  color: #888;
+  font-size: 0.82em;
+  line-height: 1.5;
+}
+
+.game-card.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.back-btn {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  padding: 10px 16px;
+  background: #1a1a2e;
+  border: 1px solid #333;
+  border-radius: 10px;
+  color: #aaa;
+  cursor: pointer;
+  z-index: 100;
+  font-size: 0.85em;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  background: #252540;
+  color: #fff;
+}
+
+.connect4-board {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  max-width: 340px;
+  margin: 15px auto;
+  background: #0f172a;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid #1e3a5f;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.connect4-cell {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #1a1a2e;
+  cursor: pointer;
+  border: 2px solid #2a2a4a;
+  transition: all 0.2s;
+}
+
+.connect4-cell.p1 {
+  background: #ef4444;
+  box-shadow: 0 0 12px rgba(239,68,68,0.4);
+  border-color: #ef4444;
+}
+
+.connect4-cell.p2 {
+  background: #fbbf24;
+  box-shadow: 0 0 12px rgba(251,191,36,0.4);
+  border-color: #fbbf24;
+}
+
+.connect4-cell.winner {
+  animation: winnerPulse 1.2s infinite;
+  border-color: #fff;
+}
+
+@keyframes winnerPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 15px rgba(255,255,255,0.2); }
+  50% { transform: scale(1.1); box-shadow: 0 0 25px rgba(255,255,255,0.5); }
+}
+
+.ttt-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  max-width: 280px;
+  margin: 15px auto;
+}
+
+.ttt-cell {
+  width: 90px;
+  height: 90px;
+  background: #1a1a2e;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2em;
+  font-weight: bold;
+  cursor: pointer;
+  border: 1px solid #2a2a4a;
+  transition: all 0.2s;
+  color: #fff;
+}
+
+.ttt-cell:hover {
+  border-color: #444;
+  background: #1e1e35;
+}
+
+.ttt-cell.x { color: #ef4444; }
+.ttt-cell.o { color: #60a5fa; }
+
+.ttt-cell.winner {
+  background: #252540 !important;
+  border-color: #fbbf24 !important;
+  box-shadow: 0 0 20px rgba(251,191,36,0.2);
+  animation: winnerPulse 1.2s infinite;
+}
+
+.ttt-cell.selected {
+  background: #333 !important;
+}
+
+.dots-boxes-container {
+  max-width: 420px;
+  margin: 15px auto;
+}
+
+.dots-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  background: #555;
+  border-radius: 50%;
+  margin: 3px;
+}
+
+.h-line {
+  width: 44px;
+  height: 5px;
+  margin: 0 2px;
+  background: #2a2a4a;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.h-line:hover { background: #444; }
+.h-line.p1 { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.4); }
+.h-line.p2 { background: #fbbf24; box-shadow: 0 0 8px rgba(251,191,36,0.4); }
+
+.v-line {
+  width: 5px;
+  height: 44px;
+  margin: 2px 3px;
+  background: #2a2a4a;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.v-line:hover { background: #444; }
+.v-line.p1 { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.4); }
+.v-line.p2 { background: #fbbf24; box-shadow: 0 0 8px rgba(251,191,36,0.4); }
+
+.box {
+  width: 44px;
+  height: 44px;
+  margin: 2px;
+  border-radius: 3px;
+  background: #0f0f1a;
+  border: 1px solid #1a1a2e;
+}
+
+.box.p1 {
+  background: rgba(239,68,68,0.12);
+  border-color: #ef4444;
+}
+
+.box.p2 {
+  background: rgba(251,191,36,0.12);
+  border-color: #fbbf24;
+}
+
+.turn-indicator {
+  text-align: center;
+  font-size: 1.05em;
+  margin: 12px 0;
+  padding: 12px 20px;
+  border-radius: 10px;
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  max-width: 340px;
+  width: 100%;
+}
+
+.score-board {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 10px 0;
+  flex-wrap: wrap;
+  max-width: 340px;
+  width: 100%;
+}
+
+.score-item {
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  text-align: center;
+  min-width: 80px;
+  flex: 1;
+}
+
+.score-item .name {
+  font-size: 0.7em;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.score-item .score {
+  font-size: 1.3em;
+  font-weight: 600;
+  color: #fff;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.9);
+  z-index: 2000;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal.active {
+  display: flex;
+}
+
+.modal-content {
+  background: #1a1a2e;
+  padding: 30px;
+  border-radius: 16px;
+  text-align: center;
+  max-width: 300px;
+  width: 90%;
+  border: 1px solid #333;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+
+.modal-content h2 {
+  margin-bottom: 12px;
+  color: #fff;
+  font-size: 1.5em;
+  font-weight: 300;
+  letter-spacing: 1px;
+}
+
+.modal-content p {
+  color: #888;
+  margin-bottom: 20px;
+  font-size: 0.9em;
+}
+
+.rematch-area {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #2a2a4a;
+  display: none;
+  text-align: center;
+  width: 100%;
+  max-width: 340px;
+}
+
+.rematch-area.show {
+  display: block;
+}
+
+.how-to-play {
+  background: #1a1a2e;
+  border-radius: 14px;
+  padding: 16px;
+  margin: 12px auto;
+  max-width: 320px;
+  border: 1px solid #2a2a4a;
+  width: 100%;
+  text-align: left;
+}
+
+.how-to-play h4 {
+  color: #fff;
+  margin-bottom: 10px;
+  font-weight: 500;
+  font-size: 0.95em;
+  letter-spacing: 1px;
+}
+
+.how-to-play ul {
+  color: #888;
+  padding-left: 18px;
+  font-size: 0.82em;
+  line-height: 1.7;
+}
+
+.mode-selector {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin: 12px 0;
+  max-width: 340px;
+  width: 100%;
+}
+
+.mode-btn {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: transparent;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+}
+
+.mode-btn.active {
+  border-color: #fff;
+  color: #fff;
+  background: #252540;
+}
+
+.room-code {
+  text-align: center;
+  font-size: 2em;
+  font-weight: 700;
+  color: #4ade80;
+  margin: 12px 0;
+  letter-spacing: 8px;
+  font-family: monospace;
+  background: #0f0f1a;
+  padding: 20px;
+  border-radius: 12px;
+  border: 2px solid #4ade80;
+  max-width: 300px;
+  width: 100%;
+  word-break: break-all;
+  box-shadow: 0 0 20px rgba(74,222,128,0.1);
+}
+
+.players-list {
+  max-width: 300px;
+  margin: 12px auto;
+  width: 100%;
+}
+
+.player-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  margin: 6px 0;
+  background: #1a1a2e;
+  border-radius: 10px;
+  border: 1px solid #2a2a4a;
+}
+
+.player-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  margin-right: 12px;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.player-name {
+  flex: 1;
+  font-size: 0.9em;
+  color: #fff;
+}
+
+.player-status {
+  font-size: 0.75em;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: #252540;
+  color: #888;
+}
+
+.player-status.online {
+  background: rgba(74,222,128,0.15);
+  color: #4ade80;
+}
+
+.input-code, .input-name {
+  width: 100%;
+  max-width: 280px;
+  margin: 10px auto;
+  display: block;
+  padding: 14px;
+  font-size: 1em;
+  text-align: center;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: #1a1a2e;
+  color: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-code:focus, .input-name:focus {
+  border-color: #666;
+}
+
+.input-code {
+  font-family: monospace;
+  letter-spacing: 8px;
+  font-size: 1.4em;
+  font-weight: 600;
+}
+
+.stats-card {
+  background: #1a1a2e;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 10px auto;
+  max-width: 300px;
+  border: 1px solid #2a2a4a;
+  width: 100%;
+}
+
+.stats-card h4 {
+  color: #fff;
+  margin-bottom: 12px;
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 500;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #252540;
+  font-size: 0.82em;
+}
+
+.stats-row:last-child {
+  border-bottom: none;
+}
+
+.stats-label {
+  color: #666;
+}
+
+.stats-value {
+  color: #fff;
+  font-weight: 600;
+}
+
+.connection-status {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75em;
+  font-weight: 600;
+  z-index: 1000;
+  background: #1a1a2e;
+  border: 1px solid #333;
+  transition: all 0.3s;
+}
+
+.status-online { color: #4ade80; border-color: #4ade80; }
+.status-offline { color: #ef4444; border-color: #ef4444; }
+.status-hosting { color: #fbbf24; border-color: #fbbf24; }
+.status-connecting { color: #60a5fa; border-color: #60a5fa; animation: pulse 1.5s infinite; }
+.status-waiting { color: #f97316; border-color: #f97316; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.status-text {
+  text-align: center;
+  color: #888;
+  font-size: 0.9em;
+  margin: 8px 0;
+  min-height: 1.2em;
+  transition: all 0.3s;
+}
+
+.status-text.error { color: #ef4444; }
+.status-text.success { color: #4ade80; }
+.status-text.info { color: #60a5fa; }
+.status-text.warning { color: #fbbf24; }
+
+.copy-btn {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: #1a1a2e;
+  color: #888;
+  cursor: pointer;
+  font-size: 0.85em;
+  margin-top: 10px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+
+.copy-btn:hover {
+  border-color: #4ade80;
+  color: #4ade80;
+}
+
+.copy-btn.copied {
+  border-color: #4ade80;
+  color: #4ade80;
+  background: rgba(74,222,128,0.1);
+}
+
+.game-selection-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+  margin: 15px auto;
+}
+
+.selection-label {
+  color: #888;
+  font-size: 0.85em;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.selection-label.host {
+  color: #4ade80;
+}
+
+.selection-label.guest {
+  color: #60a5fa;
+}
+
+.chat-box {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #0f0f1a;
+  border-top: 1px solid #2a2a4a;
+  padding: 10px;
+  max-height: 200px;
+  display: none;
+  z-index: 500;
+}
+
+.chat-box.active {
+  display: block;
+}
+
+.chat-messages {
+  max-height: 130px;
+  overflow-y: auto;
+  font-size: 0.82em;
+  margin-bottom: 8px;
+  padding: 4px;
+}
+
+.chat-msg {
+  padding: 4px 0;
+  color: #888;
+}
+
+.chat-msg strong {
+  color: #fff;
+  font-weight: 500;
+}
+
+.chat-msg.system {
+  color: #666;
+  font-style: italic;
+}
+
+.chat-msg.error {
+  color: #ef4444;
+}
+
+.chat-input {
+  display: flex;
+  gap: 8px;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #1a1a2e;
+  color: #fff;
+  outline: none;
+  font-size: 0.85em;
+}
+
+.chat-input button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: #333;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.85em;
+  transition: all 0.2s;
+}
+
+.chat-input button:hover {
+  background: #444;
+}
+
+.section-title {
+  text-align: center;
+  color: #888;
+  margin: 15px 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  font-size: 0.75em;
+}
+
+.divider {
+  width: 40px;
+  height: 1px;
+  background: #333;
+  margin: 20px auto;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #2a2a4a;
+  border-top-color: #4ade80;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.notification {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100px);
+  background: #1a1a2e;
+  border: 1px solid #4ade80;
+  color: #4ade80;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 0.9em;
+  z-index: 1500;
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  max-width: 90%;
+  text-align: center;
+}
+
+.notification.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+.notification.error {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.notification.warning {
+  border-color: #fbbf24;
+  color: #fbbf24;
+}
+
+@media(max-width: 400px) {
+  .connect4-cell { width: 36px; height: 36px; }
+  .ttt-cell { width: 75px; height: 75px; font-size: 1.8em; }
+  .h-line { width: 36px; }
+  .v-line { height: 36px; }
+  .box { width: 36px; height: 36px; }
+  .room-code { font-size: 1.6em; letter-spacing: 6px; padding: 16px; }
+}
+</style>
+</head>
+<body>
+<div class="bg-pattern"></div>
+
+<div class="connection-status status-offline" id="connStatus">Offline</div>
+<div class="notification" id="notification"></div>
+
+<!-- MAIN MENU -->
+<div class="page active" id="mainMenu">
+  <div class="content">
+    <h1>Board Games</h1>
+    <p class="subtitle">Multiplayer Board Games</p>
+    <div class="divider"></div>
+    <button class="btn btn-primary" onclick="navigateTo('profileMenu')">Profile & Stats</button>
+    <button class="btn btn-success" onclick="navigateTo('hostJoin')">Play Online</button>
+    <button class="btn btn-success" onclick="navigateTo('localMenu')">Play on This Device</button>
+    <button class="btn btn-info" onclick="navigateTo('howToPlay')">How to Play</button>
+  </div>
+</div>
+
+<!-- PROFILE -->
+<div class="page" id="profileMenu">
+  <button class="back-btn" onclick="navigateTo('mainMenu')">Back</button>
+  <div class="content">
+    <h1>Profile</h1>
+    <p class="subtitle">Your Identity</p>
+    <div class="divider"></div>
+    <input type="text" class="input-name" id="playerNameInput" placeholder="Enter your name" maxlength="15">
+    <button class="btn btn-primary" onclick="saveProfile()">Save Name</button>
+    <div class="stats-card">
+      <h4>Statistics</h4>
+      <div class="stats-row"><span class="stats-label">Connect 4 Wins</span><span class="stats-value" id="statC4Wins">0</span></div>
+      <div class="stats-row"><span class="stats-label">Connect 4 Losses</span><span class="stats-value" id="statC4Losses">0</span></div>
+      <div class="stats-row"><span class="stats-label">TTT Wins</span><span class="stats-value" id="statTTTWins">0</span></div>
+      <div class="stats-row"><span class="stats-label">TTT Losses</span><span class="stats-value" id="statTTTLosses">0</span></div>
+      <div class="stats-row"><span class="stats-label">Dots &amp; Boxes Wins</span><span class="stats-value" id="statDBWins">0</span></div>
+      <div class="stats-row"><span class="stats-label">Dots &amp; Boxes Losses</span><span class="stats-value" id="statDBLosses">0</span></div>
+      <div class="stats-row"><span class="stats-label">Current Streak</span><span class="stats-value" id="statStreak">0</span></div>
+      <div class="stats-row"><span class="stats-label">Best Streak</span><span class="stats-value" id="statBestStreak">0</span></div>
+    </div>
+    <button class="btn btn-danger" onclick="clearStats()">Reset All Stats</button>
+  </div>
+</div>
+
+<!-- HOW TO PLAY -->
+<div class="page" id="howToPlay">
+  <button class="back-btn" onclick="navigateTo('mainMenu')">Back</button>
+  <div class="content">
+    <h1>How to Play</h1>
+    <p class="subtitle">Game Rules</p>
+    <div class="divider"></div>
+    <div class="how-to-play">
+      <h4>Connect 4</h4>
+      <ul><li>Tap any column to drop your piece</li><li>First to connect 4 in a row wins</li><li>Winning pieces glow gold</li></ul>
+    </div>
+    <div class="how-to-play">
+      <h4>Strategic Tic-Tac-Toe</h4>
+      <ul><li>Each player only has 3 pieces</li><li>After placing all 3, tap your piece then tap empty spot to move</li><li>Winning 3 glow gold</li></ul>
+    </div>
+    <div class="how-to-play">
+      <h4>Dots &amp; Boxes</h4>
+      <ul><li>Tap between dots to draw a line</li><li>Complete a box to claim it and get extra turn</li><li>Most boxes wins</li></ul>
+    </div>
+    <div class="how-to-play">
+      <h4>Online Play</h4>
+      <ul><li>Host creates a room and shares the 6-digit code</li><li>Friend enters the room code to join</li><li>Host selects the game after both players connect</li><li>Game starts automatically for both players</li></ul>
+    </div>
+  </div>
+</div>
+
+<!-- HOST / JOIN -->
+<div class="page" id="hostJoin">
+  <button class="back-btn" onclick="navigateTo('mainMenu')">Back</button>
+  <div class="content">
+    <h1>Online Play</h1>
+    <p class="subtitle">Connect with Friends</p>
+    <div class="divider"></div>
+    <button class="btn btn-success" onclick="initHost()">Host a Game</button>
+    <button class="btn btn-primary" onclick="navigateTo('joinGame')">Join a Game</button>
+  </div>
+</div>
+
+<!-- JOIN GAME -->
+<div class="page" id="joinGame">
+  <button class="back-btn" onclick="navigateTo('hostJoin')">Back</button>
+  <div class="content">
+    <h1>Join Game</h1>
+    <p class="subtitle">Enter 6-Digit Room Code</p>
+    <div class="divider"></div>
+    <input type="text" class="input-code" id="roomCodeInput" placeholder="123456" maxlength="6" inputmode="numeric">
+    <div class="status-text" id="joinStatusText"></div>
+    <button class="btn btn-success" id="joinBtn" onclick="joinGame()">Join Room</button>
+  </div>
+</div>
+
+<!-- HOST LOBBY -->
+<div class="page" id="hostLobby">
+  <button class="back-btn" onclick="disconnectMultiplayer()">Leave</button>
+  <div class="content">
+    <h1>Host Room</h1>
+    <p class="subtitle">Share this code with your friend</p>
+    <div class="divider"></div>
+    <div class="room-code" id="hostRoomCode">------</div>
+    <button class="copy-btn" id="copyCodeBtn" onclick="copyRoomCode()">Copy Code</button>
+    <div class="status-text info" id="hostStatusText">Creating room...</div>
+    <div class="spinner" id="hostSpinner"></div>
+    <div class="players-list" id="hostPlayers"></div>
+  </div>
+</div>
+
+<!-- PEER LOBBY -->
+<div class="page" id="peerLobby">
+  <button class="back-btn" onclick="disconnectMultiplayer()">Leave</button>
+  <div class="content">
+    <h1>Connected</h1>
+    <p class="subtitle">Joined room successfully</p>
+    <div class="divider"></div>
+    <div class="status-text info" id="peerStatusText">Joining room...</div>
+    <div class="spinner" id="peerSpinner"></div>
+    <div class="players-list" id="peerPlayers"></div>
+  </div>
+</div>
+
+<!-- GAME SELECTION -->
+<div class="page" id="gameSelection">
+  <button class="back-btn" onclick="disconnectMultiplayer()">Leave</button>
+  <div class="content">
+    <h1>Select Game</h1>
+    <p class="subtitle" id="selectionSubtitle">Waiting for host...</p>
+    <div class="divider"></div>
+    <div class="status-text" id="selectionStatus">Both players connected!</div>
+    <div class="game-selection-grid" id="gameSelectionGrid">
+      <div class="game-card" id="selectC4" onclick="selectGame('connect4')">
+        <h3>Connect 4</h3>
+        <p>Drop pieces to connect four in a row</p>
+      </div>
+      <div class="game-card" id="selectTTT" onclick="selectGame('tictactoe')">
+        <h3>Strategic Tic-Tac-Toe</h3>
+        <p>3 pieces each, then move strategically</p>
+      </div>
+      <div class="game-card" id="selectDB" onclick="selectGame('dotsboxes')">
+        <h3>Dots &amp; Boxes</h3>
+        <p>Draw lines, complete boxes, score points</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOCAL MENU -->
+<div class="page" id="localMenu">
+  <button class="back-btn" onclick="navigateTo('mainMenu')">Back</button>
+  <div class="content">
+    <h1>Local Play</h1>
+    <p class="subtitle">Pass phone between players</p>
+    <div class="divider"></div>
+    <div class="game-card" onclick="startLocalGame('connect4')"><h3>Connect 4</h3><p>2 players on this device</p></div>
+    <div class="game-card" onclick="startLocalGame('tictactoe')"><h3>Strategic Tic-Tac-Toe</h3><p>Pass and play</p></div>
+    <div class="game-card" onclick="startLocalGame('dotsboxes')"><h3>Dots &amp; Boxes</h3><p>Classic pencil game</p></div>
+  </div>
+</div>
+
+<!-- CONNECT 4 GAME -->
+<div class="page" id="connect4Game">
+  <button class="back-btn" onclick="leaveGame()">Back</button>
+  <div class="content">
+    <h1>Connect 4</h1>
+    <div class="mode-selector" id="c4ModeSelector">
+      <button class="mode-btn active" id="c4mode1" onclick="setC4Mode('1v1')">1 vs 1</button>
+      <button class="mode-btn" id="c4mode2" onclick="setC4Mode('2v2')">2 vs 2</button>
+    </div>
+    <div class="turn-indicator" id="c4turn">Red's Turn</div>
+    <div class="score-board">
+      <div class="score-item"><div class="name" id="c4name1">Red</div><div class="score" id="c4s1">0</div></div>
+      <div class="score-item"><div class="name" id="c4name2">Yellow</div><div class="score" id="c4s2">0</div></div>
+    </div>
+    <div class="connect4-board" id="c4board"></div>
+    <div class="rematch-area" id="c4rematch">
+      <button class="btn btn-warning btn-small" onclick="isMultiplayerGame ? rematchMultiplayer() : resetC4()">Rematch</button>
+      <button class="btn btn-info btn-small" onclick="goMainMenu()">Main Menu</button>
+    </div>
+  </div>
+</div>
+
+<!-- TIC TAC TOE GAME -->
+<div class="page" id="tictactoeGame">
+  <button class="back-btn" onclick="leaveGame()">Back</button>
+  <div class="content">
+    <h1>Strategic TTT</h1>
+    <div class="turn-indicator" id="tttturn">X - Place piece</div>
+    <div class="score-board">
+      <div class="score-item"><div class="name" id="tttname1">X</div><div class="score" id="tttsx">0</div></div>
+      <div class="score-item"><div class="name" id="tttname2">O</div><div class="score" id="tttso">0</div></div>
+    </div>
+    <div class="ttt-board" id="tttboard"></div>
+    <div class="how-to-play" style="margin-top:12px">
+      <h4>Phase: <span id="tttphase">Place</span></h4>
+      <ul><li>Place 3 pieces each</li><li>Then tap your piece, then destination</li><li>Only adjacent moves</li></ul>
+    </div>
+    <div class="rematch-area" id="tttrematch">
+      <button class="btn btn-warning btn-small" onclick="isMultiplayerGame ? rematchMultiplayer() : resetTTT()">Rematch</button>
+      <button class="btn btn-info btn-small" onclick="goMainMenu()">Main Menu</button>
+    </div>
+  </div>
+</div>
+
+<!-- DOTS & BOXES GAME -->
+<div class="page" id="dotsboxesGame">
+  <button class="back-btn" onclick="leaveGame()">Back</button>
+  <div class="content">
+    <h1>Dots &amp; Boxes</h1>
+    <div class="turn-indicator" id="dbturn">Player 1's Turn</div>
+    <div class="score-board">
+      <div class="score-item"><div class="name" id="dbname1">P1</div><div class="score" id="dbs1">0</div></div>
+      <div class="score-item"><div class="name" id="dbname2">P2</div><div class="score" id="dbs2">0</div></div>
+    </div>
+    <div class="dots-boxes-container" id="dbboard"></div>
+    <div class="rematch-area" id="dbrematch">
+      <button class="btn btn-warning btn-small" onclick="isMultiplayerGame ? rematchMultiplayer() : resetDB()">Rematch</button>
+      <button class="btn btn-info btn-small" onclick="goMainMenu()">Main Menu</button>
+    </div>
+  </div>
+</div>
+
+<!-- WIN MODAL -->
+<div class="modal" id="winModal">
+  <div class="modal-content">
+    <h2 id="winTitle">Winner!</h2>
+    <p id="winSub"></p>
+    <button class="btn btn-primary" onclick="hideWin()">Continue</button>
+  </div>
+</div>
+
+<!-- CHAT -->
+<div class="chat-box" id="chatBox">
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-input">
+    <input type="text" id="chatInput" placeholder="Type message..." onkeypress="if(event.key==='Enter')sendChat()">
+    <button onclick="sendChat()">Send</button>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- FIREBASE CONFIG - PASTE YOUR KEYS BELOW      -->
+<!-- ============================================ -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, set, get, onValue, off, update, remove, onDisconnect, push, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  // ═══════════════════════════════════════════════════════════
+  // ║  PASTE YOUR FIREBASE CONFIGURATION HERE                 ║
+  // ║  Get this from: Firebase Console → Project Settings →   ║
+  // ║  General → Your apps → SDK setup and configuration      ║
+  // ═══════════════════════════════════════════════════════════
+    const firebaseConfig = {
+    apiKey: "AIzaSyAmmUBTcmwzA6FYI36kwXIVUPmG5DJx6QU",
+    authDomain: "boardgames-3f6bd.firebaseapp.com",
+    databaseURL: "https://boardgames-3f6bd-default-rtdb.firebaseio.com",
+    projectId: "boardgames-3f6bd",
+    storageBucket: "boardgames-3f6bd.firebasestorage.app",
+    messagingSenderId: "250713099487",
+    appId: "1:250713099487:web:5a954f81c4d48da762ed6a",
+    measurementId: "G-1PSE15RCG6"
+  };
+  
+  try {
+    const app = initializeApp(firebaseConfig);
+    console.log("✅ Firebase initialized");
+    const db = getDatabase(app);
+    console.log("✅ Database ready");
+    window.firebaseDB = db;
+    window.firebaseRef = ref;
+    window.firebaseSet = set;
+    window.firebaseGet = get;
+    window.firebaseOnValue = onValue;
+    window.firebaseOff = off;
+    window.firebaseUpdate = update;
+    window.firebaseRemove = remove;
+    window.firebaseOnDisconnect = onDisconnect;
+    window.firebasePush = push;
+    window.firebaseChild = child;
+    window.firebaseReady = true;
+    if (window.initGameEngine) window.initGameEngine();
+  } catch (err) {
+    console.error("❌ Firebase error:", err);
+    alert("Firebase error: " + err.message);
+  }
+</script>
+
+
+<script>
+// ==================== NAVIGATION ====================
+function navigateTo(pageId) {
+  var pages = document.querySelectorAll('.page');
+  for (var i = 0; i < pages.length; i++) {
+    pages[i].classList.remove('active');
+  }
+  document.getElementById(pageId).classList.add('active');
+}
+
+function showWin(title, sub) {
+  document.getElementById('winTitle').textContent = title;
+  document.getElementById('winSub').textContent = sub;
+  document.getElementById('winModal').classList.add('active');
+}
+
+function hideWin() {
+  document.getElementById('winModal').classList.remove('active');
+}
+
+function goMainMenu() {
+  navigateTo('mainMenu');
+}
+
+function leaveGame() {
+  if (isMultiplayerGame) {
+    disconnectMultiplayer();
+  } else {
+    navigateTo('localMenu');
+  }
+}
+
+function showNotification(msg, type) {
+  var el = document.getElementById('notification');
+  el.textContent = msg;
+  el.className = 'notification ' + (type || '');
+  el.classList.add('show');
+  setTimeout(function() {
+    el.classList.remove('show');
+  }, 3000);
+}
+
+// ==================== PROFILE & STATS ====================
+var playerName = 'Player';
+var stats = {
+  c4Wins: 0, c4Losses: 0,
+  tttWins: 0, tttLosses: 0,
+  dbWins: 0, dbLosses: 0,
+  streak: 0, bestStreak: 0
+}
+function loadProfile() {
+  // localStorage blocked by sandbox - skip loading
+  updateStatsDisplay();
+  document.getElementById('playerNameInput').value = playerName;
+}
+function saveProfile() {
+  var n = document.getElementById('playerNameInput').value.trim();
+  if (n) {
+    playerName = n;
+    showWin('Saved!', 'Your name is now ' + n);
+  } else {
+    showWin('Error', 'Please enter a name');
+  }
+}
+
+function saveStats() {
+  // localStorage blocked by sandbox - skip saving
+  updateStatsDisplay();
+}
+function updateStatsDisplay() {
+  document.getElementById('statC4Wins').textContent = stats.c4Wins;
+  document.getElementById('statC4Losses').textContent = stats.c4Losses;
+  document.getElementById('statTTTWins').textContent = stats.tttWins;
+  document.getElementById('statTTTLosses').textContent = stats.tttLosses;
+  document.getElementById('statDBWins').textContent = stats.dbWins;
+  document.getElementById('statDBLosses').textContent = stats.dbLosses;
+  document.getElementById('statStreak').textContent = stats.streak;
+  document.getElementById('statBestStreak').textContent = stats.bestStreak;
+}
+
+function recordWin(game) {
+  stats.streak = stats.streak + 1;
+  if (stats.streak > stats.bestStreak) stats.bestStreak = stats.streak;
+  if (game === 'connect4') stats.c4Wins = stats.c4Wins + 1;
+  if (game === 'tictactoe') stats.tttWins = stats.tttWins + 1;
+  if (game === 'dotsboxes') stats.dbWins = stats.dbWins + 1;
+  saveStats();
+}
+
+function recordLoss(game) {
+  stats.streak = 0;
+  if (game === 'connect4') stats.c4Losses = stats.c4Losses + 1;
+  if (game === 'tictactoe') stats.tttLosses = stats.tttLosses + 1;
+  if (game === 'dotsboxes') stats.dbLosses = stats.dbLosses + 1;
+  saveStats();
+}
+
+function clearStats() {
+  if (confirm('Reset all stats?')) {
+    stats = {
+      c4Wins: 0, c4Losses: 0,
+      tttWins: 0, tttLosses: 0,
+      dbWins: 0, dbLosses: 0,
+      streak: 0, bestStreak: 0
+    };
+    updateStatsDisplay();
+  }
+}
+
+// ==================== MULTIPLAYER STATE ====================
+var isMultiplayerGame = false;
+var isHost = false;
+var currentGame = '';
+var peerPlayers = [];
+var myRoomCode = null;
+var myPlayerNumber = null;
+var roomRef = null;
+var roomListeners = [];
+var gameRef = null;
+var gameListeners = [];
+var chatRef = null;
+var chatListener = null;
+
+// ==================== CONNECTION STATUS ====================
+function updateConnStatus(status) {
+  var el = document.getElementById('connStatus');
+  el.className = 'connection-status';
+  switch(status) {
+    case 'online':
+    case 'connected':
+      el.classList.add('status-online');
+      el.textContent = 'Online';
+      break;
+    case 'hosting':
+      el.classList.add('status-hosting');
+      el.textContent = 'Hosting';
+      break;
+    case 'waiting':
+      el.classList.add('status-waiting');
+      el.textContent = 'Waiting';
+      break;
+    case 'connecting':
+      el.classList.add('status-connecting');
+      el.textContent = 'Connecting...';
+      break;
+    default:
+      el.classList.add('status-offline');
+      el.textContent = 'Offline';
+  }
+}
+
+// ==================== FIREBASE HELPERS ====================
+function getDb() { return window.firebaseDB; }
+function dbRef(path) { return window.firebaseRef(getDb(), path); }
+function dbSet(ref, val) { return window.firebaseSet(ref, val); }
+function dbGet(ref) { return window.firebaseGet(ref); }
+function dbOnValue(ref, cb) { return window.firebaseOnValue(ref, cb); }
+function dbOff(ref, event, cb) { return window.firebaseOff(ref, event, cb); }
+function dbUpdate(ref, val) { return window.firebaseUpdate(ref, val); }
+function dbRemove(ref) { return window.firebaseRemove(ref); }
+function dbOnDisconnect(ref) { return window.firebaseOnDisconnect(ref); }
+function dbPush(ref) { return window.firebasePush(ref); }
+function dbChild(ref, path) { return window.firebaseChild(ref, path); }
+
+function addRoomListener(ref, event, callback) {
+  var unsub = dbOnValue(ref, callback);
+  roomListeners.push({ref: ref, event: event, unsub: unsub});
+  return unsub;
+}
+
+function addGameListener(ref, event, callback) {
+  var unsub = dbOnValue(ref, callback);
+  gameListeners.push({ref: ref, event: event, unsub: unsub});
+  return unsub;
+}
+
+function clearRoomListeners() {
+  console.log('[MP] Clearing', roomListeners.length, 'room listeners');
+  for (var i = 0; i < roomListeners.length; i++) {
+    try { if (typeof roomListeners[i].unsub === 'function') roomListeners[i].unsub(); } catch(e) {}
+  }
+  roomListeners = [];
+}
+
+function clearGameListeners() {
+  console.log('[MP] Clearing', gameListeners.length, 'game listeners');
+  for (var i = 0; i < gameListeners.length; i++) {
+    try { if (typeof gameListeners[i].unsub === 'function') gameListeners[i].unsub(); } catch(e) {}
+  }
+  gameListeners = [];
+}
+
+function clearChatListener() {
+  if (chatListener) {
+    try { if (typeof chatListener === 'function') chatListener(); } catch(e) {}
+    chatListener = null;
+  }
+}
+
+// ==================== ROOM CODE GENERATOR ====================
+function generateRoomCode() {
+  var code = '';
+  for (var i = 0; i < 6; i++) {
+    code += Math.floor(Math.random() * 10);
+  }
+  return code;
+}
+
+// ==================== CLEANUP OLD ROOMS ====================
+function cleanupOldRooms() {
+  var roomsRef = dbRef('rooms');
+  dbGet(roomsRef).then(function(snapshot) {
+    var rooms = snapshot.val();
+    if (!rooms) return;
+    var now = Date.now();
+    var cutoff = 30 * 60 * 1000; // 30 minutes
+    for (var code in rooms) {
+      var room = rooms[code];
+      if (room && room.lastActivity && (now - room.lastActivity > cutoff)) {
+        if (!room.host || !room.host.online) {
+          dbRemove(dbRef('rooms/' + code));
+        }
+      }
+    }
+  }).catch(function() {});
+}
+
+// ==================== HOST FLOW ====================
+function initHost() {
+  if (!window.firebaseReady) {
+    showNotification('Firebase not ready. Please wait...', 'error');
+    return;
+  }
+
+  document.getElementById('hostStatusText').textContent = 'Creating room...';
+  document.getElementById('hostStatusText').className = 'status-text info';
+  document.getElementById('hostRoomCode').textContent = '------';
+  document.getElementById('hostPlayers').innerHTML = '';
+  document.getElementById('hostSpinner').style.display = 'block';
+  document.getElementById('copyCodeBtn').style.display = 'none';
+
+  navigateTo('hostLobby');
+  updateConnStatus('connecting');
+
+  var code = generateRoomCode();
+  myRoomCode = code;
+  myPlayerNumber = 1;
+  isHost = true;
+  isMultiplayerGame = true;
+
+  var roomPath = 'rooms/' + code;
+  roomRef = dbRef(roomPath);
+
+  var roomData = {
+    host: {
+      name: playerName,
+      joined: Date.now(),
+      online: true
+    },
+    guest: null,
+    status: 'waiting',
+    gameType: null,
+    created: Date.now(),
+    lastActivity: Date.now()
+  };
+
+  dbSet(roomRef, roomData).then(function() {
+    document.getElementById('hostRoomCode').textContent = code;
+    document.getElementById('hostStatusText').textContent = 'Room created! Share this code:';
+    document.getElementById('hostStatusText').className = 'status-text success';
+    document.getElementById('hostSpinner').style.display = 'none';
+    document.getElementById('copyCodeBtn').style.display = 'inline-flex';
+    updateConnStatus('hosting');
+
+    peerPlayers = [{name: playerName, number: 1, color: '#ef4444', online: true}];
+    updateHostPlayers();
+    addChatMsg('System', 'Room ' + code + ' created. Waiting for opponent...');
+
+    // Listen for guest joining
+    addRoomListener(dbChild(roomRef, 'guest'), 'value', function(snapshot) {
+      var guest = snapshot.val();
+      if (guest && guest.name) {
+        peerPlayers[1] = {name: guest.name, number: 2, color: '#fbbf24', online: guest.online !== false};
+        updateHostPlayers();
+        document.getElementById('hostStatusText').textContent = guest.name + ' joined!';
+        document.getElementById('hostStatusText').className = 'status-text success';
+        showNotification(guest.name + ' joined!', 'success');
+        addChatMsg('System', guest.name + ' joined the room.');
+
+        dbUpdate(roomRef, {
+          status: 'selecting',
+          lastActivity: Date.now()
+        });
+
+        setTimeout(function() {
+          showGameSelection(true);
+        }, 500);
+      }
+    });
+
+    // Listen for game selection
+    addRoomListener(dbChild(roomRef, 'gameType'), 'value', function(snapshot) {
+      var gameType = snapshot.val();
+      if (gameType && currentGame !== gameType) {
+        startMultiplayerGame(gameType, true);
+      }
+    });
+
+    // Listen for guest disconnect
+    addRoomListener(dbChild(roomRef, 'guest/online'), 'value', function(snapshot) {
+      var online = snapshot.val();
+      if (online === false && peerPlayers[1]) {
+        document.getElementById('hostStatusText').textContent = peerPlayers[1].name + ' disconnected!';
+        document.getElementById('hostStatusText').className = 'status-text error';
+        showNotification(peerPlayers[1].name + ' disconnected!', 'error');
+        addChatMsg('System', peerPlayers[1].name + ' disconnected.');
+      }
+    });
+
+    // Set up disconnect handler
+    var presenceRef = dbChild(roomRef, 'host/online');
+    dbOnDisconnect(presenceRef).set(false);
+    dbSet(presenceRef, true);
+
+    cleanupOldRooms();
+
+  }).catch(function(err) {
+    document.getElementById('hostStatusText').textContent = 'Error: ' + err.message;
+    document.getElementById('hostStatusText').className = 'status-text error';
+    document.getElementById('hostSpinner').style.display = 'none';
+    showNotification('Failed to create room: ' + err.message, 'error');
+  });
+}
+
+// ==================== JOIN FLOW ====================
+function joinGame() {
+  if (!window.firebaseReady) {
+    showNotification('Firebase not ready. Please wait...', 'error');
+    return;
+  }
+
+  var code = document.getElementById('roomCodeInput').value.trim();
+  var statusEl = document.getElementById('joinStatusText');
+  var btn = document.getElementById('joinBtn');
+
+  if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
+    statusEl.textContent = 'Enter a valid 6-digit numeric code';
+    statusEl.className = 'status-text error';
+    return;
+  }
+
+  statusEl.textContent = 'Joining room...';
+  statusEl.className = 'status-text info';
+  btn.disabled = true;
+
+  var roomPath = 'rooms/' + code;
+  var tempRef = dbRef(roomPath);
+
+  dbGet(tempRef).then(function(snapshot) {
+    var room = snapshot.val();
+
+    if (!room) {
+      statusEl.textContent = 'Room not found. Check the code.';
+      statusEl.className = 'status-text error';
+      btn.disabled = false;
+      return;
+    }
+
+    if (room.status !== 'waiting' || room.guest) {
+      statusEl.textContent = 'Room is full or game already started.';
+      statusEl.className = 'status-text error';
+      btn.disabled = false;
+      return;
+    }
+
+    myRoomCode = code;
+    myPlayerNumber = 2;
+    isHost = false;
+    isMultiplayerGame = true;
+    roomRef = tempRef;
+
+    var guestData = {
+      name: playerName,
+      joined: Date.now(),
+      online: true
+    };
+
+    dbUpdate(roomRef, {
+      guest: guestData,
+      status: 'selecting',
+      lastActivity: Date.now()
+    }).then(function() {
+      navigateTo('peerLobby');
+      updateConnStatus('online');
+
+      document.getElementById('peerStatusText').textContent = 'Joined! Waiting for host to select game...';
+      document.getElementById('peerStatusText').className = 'status-text info';
+      document.getElementById('peerSpinner').style.display = 'none';
+
+      peerPlayers = [
+        {name: room.host.name || 'Host', number: 1, color: '#ef4444', online: true},
+        {name: playerName, number: 2, color: '#fbbf24', online: true}
+      ];
+      updatePeerPlayers();
+      addChatMsg('System', 'Joined room! Waiting for host to select a game...');
+
+      // Listen for game selection
+      addRoomListener(dbChild(roomRef, 'gameType'), 'value', function(snapshot) {
+        var gameType = snapshot.val();
+        if (gameType) {
+          startMultiplayerGame(gameType, false);
+        }
+      });
+
+      // Listen for host disconnect
+      addRoomListener(dbChild(roomRef, 'host/online'), 'value', function(snapshot) {
+        var online = snapshot.val();
+        if (online === false) {
+          document.getElementById('peerStatusText').textContent = 'Host disconnected!';
+          document.getElementById('peerStatusText').className = 'status-text error';
+          showNotification('Host disconnected!', 'error');
+          addChatMsg('System', 'Host disconnected.');
+        }
+      });
+
+      // Set up disconnect handler
+      var presenceRef = dbChild(roomRef, 'guest/online');
+      dbOnDisconnect(presenceRef).set(false);
+      dbSet(presenceRef, true);
+
+    }).catch(function(err) {
+      statusEl.textContent = 'Error: ' + err.message;
+      statusEl.className = 'status-text error';
+      btn.disabled = false;
+    });
+
+  }).catch(function(err) {
+    statusEl.textContent = 'Error: ' + err.message;
+    statusEl.className = 'status-text error';
+    btn.disabled = false;
+  });
+}
+
+// ==================== GAME SELECTION ====================
+function showGameSelection(host) {
+  isHost = host;
+  navigateTo('gameSelection');
+
+  var subtitle = document.getElementById('selectionSubtitle');
+  var status = document.getElementById('selectionStatus');
+  var c4 = document.getElementById('selectC4');
+  var ttt = document.getElementById('selectTTT');
+  var db = document.getElementById('selectDB');
+
+  if (host) {
+    subtitle.textContent = 'Select a game to start';
+    status.textContent = 'Click a game below to start!';
+    status.className = 'status-text success';
+    c4.classList.remove('disabled');
+    ttt.classList.remove('disabled');
+    db.classList.remove('disabled');
+  } else {
+    subtitle.textContent = 'Waiting for host...';
+    status.textContent = 'The host is selecting a game...';
+    status.className = 'status-text info';
+    c4.classList.add('disabled');
+    ttt.classList.add('disabled');
+    db.classList.add('disabled');
+  }
+}
+
+function selectGame(gameType) {
+  if (!isHost || !roomRef) return;
+
+  document.getElementById('selectionStatus').textContent = 'Starting ' + gameType + '...';
+  document.getElementById('selectionStatus').className = 'status-text success';
+
+  var cards = document.querySelectorAll('#gameSelectionGrid .game-card');
+  for (var i = 0; i < cards.length; i++) {
+    cards[i].classList.add('disabled');
+  }
+
+  var gameState = initGameState(gameType);
+  var currentPlayer = Math.random() > 0.5 ? 1 : 2;
+  console.log('[MP] selectGame type=' + gameType + ' firstPlayer=' + currentPlayer);
+
+  dbUpdate(roomRef, {
+    gameType: gameType,
+    status: 'playing',
+    gameState: gameState,
+    currentPlayer: currentPlayer,
+    gameEnded: null,
+    moveHistory: [],
+    lastActivity: Date.now()
+  }).then(function() {
+    console.log('[MP] Room updated for game start');
+    startMultiplayerGame(gameType, true);
+  }).catch(function(err) {
+    showNotification('Error starting game: ' + err.message, 'error');
+  });
+}
+
+function initGameState(gameType) {
+  switch(gameType) {
+    case 'connect4':
+      return { board: [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]] };
+    case 'tictactoe':
+      return { board: [null,null,null,null,null,null,null,null,null], history: {X: [], O: []}, phase: 'place' };
+    case 'dotsboxes':
+      return {
+        hLines: [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+        vLines: [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]],
+        boxes: [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
+      };
+    default:
+      return null;
+  }
+}
+
+// ==================== START MULTIPLAYER GAME ====================
+function startMultiplayerGame(gameType, hostPlayer) {
+  if (currentGame === gameType && isMultiplayerGame) {
+    console.log('[MP] startMultiplayerGame already active for', gameType, '- skipping');
+    return;
+  }
+  console.log('[MP] startMultiplayerGame type=' + gameType + ' isHost=' + hostPlayer);
+  currentGame = gameType;
+  isMultiplayerGame = true;
+  isHost = hostPlayer;
+
+  // Clear stale game listeners before new ones
+  clearGameListeners();
+
+  // Navigate and reset BEFORE attaching listeners to avoid initial-value overwrite
+  if (gameType === 'connect4') {
+    navigateTo('connect4Game');
+    resetC4Multiplayer();
+  } else if (gameType === 'tictactoe') {
+    navigateTo('tictactoeGame');
+    resetTTTMultiplayer();
+  } else if (gameType === 'dotsboxes') {
+    navigateTo('dotsboxesGame');
+    resetDBMultiplayer();
+  }
+
+  document.getElementById('chatBox').classList.add('active');
+  setupChat();
+
+  // gameState listener
+  var stateRef = dbChild(roomRef, 'gameState');
+  addGameListener(stateRef, 'value', function(snapshot) {
+    var state = snapshot.val();
+    if (!state) return;
+    console.log('[MP] gameState update received');
+    syncGameState(gameType, state);
+  });
+
+  // currentPlayer listener
+  var turnRef = dbChild(roomRef, 'currentPlayer');
+  addGameListener(turnRef, 'value', function(snapshot) {
+    var player = snapshot.val();
+    if (player === null || player === undefined) return;
+    console.log('[MP] currentPlayer update:', player);
+    updateTurnFromServer(player);
+  });
+
+  // gameEnded listener
+  var endRef = dbChild(roomRef, 'gameEnded');
+  addGameListener(endRef, 'value', function(snapshot) {
+    var ended = snapshot.val();
+    if (!ended) return;
+    console.log('[MP] gameEnded received:', ended);
+    handleRemoteGameEnd(ended);
+  });
+}
+function syncGameState(gameType, state) {
+  console.log('[MP:Sync] syncGameState type=' + gameType);
+  if (gameType === 'connect4') {
+    var nb = objectToArray2D(state.board);
+    if (nb) c4board = nb;
+    if (state.scores) {
+      var sc = objectToArray(state.scores);
+      if (sc) {
+        c4scores[0] = sc[0] || 0;
+        c4scores[1] = sc[1] || 0;
+        document.getElementById('c4s1').textContent = c4scores[0];
+        document.getElementById('c4s2').textContent = c4scores[1];
+      }
+    }
+    drawC4();
+  } else if (gameType === 'tictactoe') {
+    var nb = objectToArray(state.board);
+    if (nb) tttboard = nb;
+    if (state.history) {
+      ttthistory = {
+        X: objectToArray(state.history.X) || [],
+        O: objectToArray(state.history.O) || []
+      };
+    }
+    if (state.phase) {
+      tttphase = state.phase;
+      document.getElementById('tttphase').textContent = tttphase === 'place' ? 'Place' : 'Move';
+    }
+    if (state.scores) {
+      tttscores.X = state.scores.X || 0;
+      tttscores.O = state.scores.O || 0;
+      document.getElementById('tttsx').textContent = tttscores.X;
+      document.getElementById('tttso').textContent = tttscores.O;
+    }
+    drawTTT();
+  } else if (gameType === 'dotsboxes') {
+    var nh = objectToArray2D(state.hLines);
+    var nv = objectToArray2D(state.vLines);
+    var nb2 = objectToArray2D(state.boxes);
+    if (nh) dbh = nh;
+    if (nv) dbv = nv;
+    if (nb2) dbb = nb2;
+    if (state.scores) {
+      var sc = objectToArray(state.scores);
+      if (sc) {
+        dbscores[0] = sc[0] || 0;
+        dbscores[1] = sc[1] || 0;
+      }
+    }
+    drawDB();
+  }
+}
+
+// Helper: Convert Firebase object-with-numeric-keys back to array
+function objectToArray(obj) {
+  if (!obj) return null;
+  if (Array.isArray(obj)) return obj;
+  var arr = [];
+  for (var key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      arr[parseInt(key)] = obj[key];
+    }
+  }
+  return arr;
+}
+
+// Helper: Convert 2D array from Firebase object format
+function objectToArray2D(obj) {
+  if (!obj) return null;
+  if (Array.isArray(obj)) return obj;
+  var arr = [];
+  for (var key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      arr[parseInt(key)] = objectToArray(obj[key]);
+    }
+  }
+  return arr;
+}
+function updateTurnFromServer(player) {
+  if (currentGame === 'connect4') {
+    c4player = player;
+    c4myTurn = (player === 1 && isHost) || (player === 2 && !isHost);
+    updateC4Turn();
+  } else if (currentGame === 'tictactoe') {
+    tttplayer = player === 1 ? 'X' : 'O';
+    tttmyTurn = (player === 1 && isHost) || (player === 2 && !isHost);
+    updateTTTTurn();
+  } else if (currentGame === 'dotsboxes') {
+    dbplayer = player;
+    dbmyTurn = (player === 1 && isHost) || (player === 2 && !isHost);
+    updateDBTurn();
+  }
+}
+
+function handleRemoteGameEnd(data) {
+  // Local player already handled their own end; this fires for the opponent
+  if (currentGame === 'connect4' && c4over) return;
+  if (currentGame === 'tictactoe' && tttover) return;
+  if (currentGame === 'dotsboxes' && dbover) return;
+  console.log('[MP] handleRemoteGameEnd:', data);
+  var name1, name2;
+  if (currentGame === 'connect4') {
+    name1 = document.getElementById('c4name1').textContent;
+    name2 = document.getElementById('c4name2').textContent;
+    c4over = true; document.getElementById('c4rematch').classList.add('show');
+  } else if (currentGame === 'tictactoe') {
+    name1 = document.getElementById('tttname1').textContent;
+    name2 = document.getElementById('tttname2').textContent;
+    tttover = true; document.getElementById('tttrematch').classList.add('show');
+  } else {
+    name1 = document.getElementById('dbname1').textContent;
+    name2 = document.getElementById('dbname2').textContent;
+    dbover = true; document.getElementById('dbrematch').classList.add('show');
+  }
+  if (data.draw) {
+    showWin('Draw!', 'Game ended in a draw');
+  } else if (data.winner) {
+    var isWinner = (data.winner === 1 && isHost) || (data.winner === 2 && !isHost);
+    var winnerName = data.winner === 1 ? name1 : name2;
+    showWin(winnerName + ' Wins!', 'Game over');
+    if (isWinner) recordWin(currentGame);
+    else recordLoss(currentGame);
+  }
+}
+
+// ==================== DISCONNECT & CLEANUP ====================
+function disconnectMultiplayer() {
+  if (roomRef) {
+    if (isHost) {
+      dbRemove(roomRef).catch(function(){});
+    } else {
+      dbUpdate(roomRef, {
+        'guest': null,
+        'status': 'waiting',
+        'lastActivity': Date.now()
+      }).catch(function(){});
+    }
+  }
+
+  clearRoomListeners();
+  clearGameListeners();
+  clearChatListener();
+
+  isMultiplayerGame = false;
+  isHost = false;
+  currentGame = '';
+  peerPlayers = [];
+  myRoomCode = null;
+  myPlayerNumber = null;
+  roomRef = null;
+
+  document.getElementById('chatBox').classList.remove('active');
+  document.getElementById('chatMessages').innerHTML = '';
+  document.getElementById('joinBtn').disabled = false;
+  document.getElementById('joinStatusText').textContent = '';
+  document.getElementById('joinStatusText').className = 'status-text';
+  document.getElementById('hostStatusText').textContent = 'Creating room...';
+  document.getElementById('hostStatusText').className = 'status-text info';
+  document.getElementById('peerStatusText').textContent = 'Joining room...';
+  document.getElementById('peerStatusText').className = 'status-text info';
+  document.getElementById('hostSpinner').style.display = 'block';
+  document.getElementById('peerSpinner').style.display = 'block';
+  document.getElementById('copyCodeBtn').style.display = 'none';
+
+  updateConnStatus('offline');
+  navigateTo('mainMenu');
+}
+
+function copyRoomCode() {
+  var code = document.getElementById('hostRoomCode').textContent;
+  if (code === '------') return;
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(code).then(function() {
+      var btn = document.getElementById('copyCodeBtn');
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(function() {
+        btn.textContent = 'Copy Code';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = code;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    var btn = document.getElementById('copyCodeBtn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(function() {
+      btn.textContent = 'Copy Code';
+      btn.classList.remove('copied');
+    }, 2000);
+  }
+}
+
+// ==================== UI UPDATES ====================
+function updateHostPlayers() {
+  var list = document.getElementById('hostPlayers');
+  var html = '';
+  for (var i = 0; i < peerPlayers.length; i++) {
+    var p = peerPlayers[i];
+    html += '<div class="player-item"><div class="player-color" style="background:' + p.color + '"></div><div class="player-name">' + p.name + '</div><div class="player-status ' + (p.online ? 'online' : '') + '">' + (p.online ? 'Online' : 'Offline') + '</div></div>';
+  }
+  list.innerHTML = html;
+}
+
+function updatePeerPlayers() {
+  var list = document.getElementById('peerPlayers');
+  var html = '';
+  for (var i = 0; i < peerPlayers.length; i++) {
+    var p = peerPlayers[i];
+    html += '<div class="player-item"><div class="player-color" style="background:' + p.color + '"></div><div class="player-name">' + p.name + '</div><div class="player-status ' + (p.online ? 'online' : '') + '">' + (p.online ? 'Online' : 'Offline') + '</div></div>';
+  }
+  list.innerHTML = html;
+}
+
+// ==================== CHAT ====================
+function setupChat() {
+  if (!roomRef) return;
+  chatRef = dbChild(roomRef, 'chat');
+  clearChatListener();
+  console.log('[MP:Chat] Setting up listener');
+  chatListener = dbOnValue(chatRef, function(snapshot) {
+    var messages = snapshot.val();
+    var chat = document.getElementById('chatMessages');
+    chat.innerHTML = '';
+    if (!messages) return;
+    var keys = Object.keys(messages).sort();
+    for (var i = 0; i < keys.length; i++) {
+      var msg = messages[keys[i]];
+      if (msg && msg.name && msg.text) {
+        var div = document.createElement('div');
+        div.className = 'chat-msg' + (msg.name === 'System' ? ' system' : '');
+        div.innerHTML = '<strong>' + msg.name + ':</strong> ' + msg.text;
+        chat.appendChild(div);
+      }
+    }
+    chat.scrollTop = chat.scrollHeight;
+    console.log('[MP:Chat] Rendered', keys.length, 'messages');
+  });
+}
+
+function sendChat() {
+  var input = document.getElementById('chatInput');
+  var msg = input.value.trim();
+  if (!msg || !chatRef) return;
+  var chatMsg = { name: playerName, text: msg, timestamp: Date.now() };
+  console.log('[MP:Chat] Sending:', chatMsg);
+  var newMsgRef = dbPush(chatRef);
+  dbSet(newMsgRef, chatMsg)
+    .then(function() { console.log('[MP:Chat] Sent OK'); })
+    .catch(function(err) { console.error('[MP:Chat] Error:', err); });
+  input.value = '';
+}
+
+function addChatMsg(name, text, append) {
+  var chat = document.getElementById('chatMessages');
+  var div = document.createElement('div');
+  div.className = 'chat-msg';
+  if (name === 'System') div.className += ' system';
+  if (name === 'Error') div.className += ' error';
+  div.innerHTML = '<strong>' + name + ':</strong> ' + text;
+  if (append !== false) {
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  } else {
+    chat.appendChild(div);
+  }
+}
+
+// ==================== LOCAL GAME START ====================
+function startLocalGame(game) {
+  currentGame = game;
+  isMultiplayerGame = false;
+  isHost = false;
+  document.getElementById('c4ModeSelector').style.display = 'flex';
+  if (game === 'connect4') {
+    navigateTo('connect4Game');
+    resetC4();
+  }
+  if (game === 'tictactoe') {
+    navigateTo('tictactoeGame');
+    resetTTT();
+  }
+  if (game === 'dotsboxes') {
+    navigateTo('dotsboxesGame');
+    resetDB();
+  }
+}
+
+// ==================== CONNECT 4 ====================
+var c4board = [];
+var c4player = 1;
+var c4mode = '1v1';
+var c4scores = [0, 0];
+var c4over = false;
+var c4winCells = [];
+var c4myTurn = false;
+
+function setC4Mode(mode) {
+  c4mode = mode;
+  document.getElementById('c4mode1').classList.toggle('active', mode === '1v1');
+  document.getElementById('c4mode2').classList.toggle('active', mode === '2v2');
+  resetC4();
+}
+
+function resetC4() {
+  c4board = [];
+  for (var r = 0; r < 6; r++) {
+    c4board[r] = [];
+    for (var c = 0; c < 7; c++) {
+      c4board[r][c] = 0;
+    }
+  }
+  c4player = 1;
+  c4over = false;
+  c4winCells = [];
+  document.getElementById('c4rematch').classList.remove('show');
+  updateC4Names();
+  drawC4();
+  updateC4Turn();
+}
+
+function resetC4Multiplayer() {
+  c4board = [];
+  for (var r = 0; r < 6; r++) {
+    c4board[r] = [];
+    for (var c = 0; c < 7; c++) {
+      c4board[r][c] = 0;
+    }
+  }
+  c4player = 1;
+  c4over = false;
+  c4winCells = [];
+  c4myTurn = isHost;
+  document.getElementById('c4rematch').classList.remove('show');
+  document.getElementById('c4ModeSelector').style.display = 'none';
+  updateC4Names();
+  drawC4();
+  updateC4Turn();
+}
+
+function updateC4Names() {
+  var p1 = isMultiplayerGame ? (isHost ? playerName : peerPlayers[0].name) : 'Red';
+  var p2 = isMultiplayerGame ? (isHost ? peerPlayers[1].name : playerName) : 'Yellow';
+  document.getElementById('c4name1').textContent = p1;
+  document.getElementById('c4name2').textContent = p2;
+}
+
+function drawC4() {
+  var board = document.getElementById('c4board');
+  board.innerHTML = '';
+  for (var r = 0; r < 6; r++) {
+    for (var c = 0; c < 7; c++) {
+      var cell = document.createElement('div');
+      cell.className = 'connect4-cell';
+      if (c4board[r][c] > 0) {
+        cell.classList.add('p' + c4board[r][c]);
+      }
+      for (var w = 0; w < c4winCells.length; w++) {
+        if (c4winCells[w][0] === r && c4winCells[w][1] === c) {
+          cell.classList.add('winner');
+        }
+      }
+      cell.onclick = (function(col) {
+        return function() { dropC4(col); };
+      })(c);
+      board.appendChild(cell);
+    }
+  }
+}
+
+function dropC4(col) {
+  if (c4over) return;
+  if (isMultiplayerGame && !c4myTurn) return;
+  console.log('[MP:C4] dropC4 col=' + col + ' player=' + c4player);
+  for (var r = 5; r >= 0; r--) {
+    if (c4board[r][col] === 0) {
+      c4board[r][col] = c4player;
+      if (isMultiplayerGame) c4myTurn = false;
+      drawC4();
+      var winResult = checkC4Win(r, col);
+      if (winResult) {
+        c4over = true;
+        c4winCells = winResult;
+        drawC4();
+        var names = ['', document.getElementById('c4name1').textContent, document.getElementById('c4name2').textContent];
+        showWin(names[c4player] + ' Wins!', '4 in a row!');
+        document.getElementById('c4rematch').classList.add('show');
+        if (isMultiplayerGame) {
+          var winner = c4player;
+          c4scores[winner - 1] = (c4scores[winner - 1] || 0) + 1;
+          document.getElementById('c4s1').textContent = c4scores[0];
+          document.getElementById('c4s2').textContent = c4scores[1];
+          console.log('[MP:C4] Win winner=' + winner + ' scores:', c4scores);
+          dbUpdate(roomRef, {
+            gameState: { board: c4board, scores: [c4scores[0], c4scores[1]], lastMoveTime: Date.now() },
+            currentPlayer: winner,
+            gameEnded: { winner: winner, draw: false },
+            lastActivity: Date.now()
+          });
+          if ((winner === 1 && isHost) || (winner === 2 && !isHost)) recordWin('connect4');
+          else recordLoss('connect4');
+        }
+        return;
+      }
+      if (checkC4Draw()) {
+        c4over = true;
+        showWin('Draw!', 'Board is full');
+        document.getElementById('c4rematch').classList.add('show');
+        if (isMultiplayerGame) {
+          dbUpdate(roomRef, {
+            gameState: { board: c4board, scores: [c4scores[0], c4scores[1]], lastMoveTime: Date.now() },
+            currentPlayer: c4player,
+            gameEnded: { winner: 0, draw: true },
+            lastActivity: Date.now()
+          });
+        }
+        return;
+      }
+      nextC4Player();
+      updateC4Turn();
+      if (isMultiplayerGame) updateFirebaseGameState();
+      return;
+    }
+  }
+}
+
+function sendMoveToFirebase(moveData) {
+  // Replaced by updateFirebaseGameState - intentionally empty
+}
+
+function updateFirebaseGameState() {
+  if (!roomRef) return;
+  console.log('[MP:C4] Writing gameState nextPlayer=' + c4player);
+  dbUpdate(roomRef, {
+    'gameState': { board: c4board, scores: [c4scores[0], c4scores[1]], lastMoveTime: Date.now() },
+    'currentPlayer': c4player,
+    'lastActivity': Date.now()
+  }).then(function() {
+    console.log('[MP:C4] gameState written OK');
+  }).catch(function(err) {
+    console.error('[MP:C4] gameState write error:', err);
+  });
+}
+
+function nextC4Player() {
+  if (c4mode === '1v1') {
+    c4player = c4player === 1 ? 2 : 1;
+  } else {
+    c4player = c4player === 1 ? 2 : c4player === 2 ? 3 : c4player === 3 ? 4 : 1;
+  }
+}
+
+function updateC4Turn() {
+  var names = ['', document.getElementById('c4name1').textContent, document.getElementById('c4name2').textContent];
+  var colors = ['', '#ef4444', '#fbbf24', '#4ade80', '#f97316'];
+  var el = document.getElementById('c4turn');
+  var turnName = names[c4player];
+  if (isMultiplayerGame && !c4myTurn) turnName += " (Opponent's Turn)";
+  el.textContent = turnName + "'s Turn";
+  el.style.color = colors[c4player];
+}
+
+function checkC4Win(row, col) {
+  var p = c4board[row][col];
+  var dirs = [[0, 1], [1, 0], [1, 1], [1, -1]];
+  for (var i = 0; i < 4; i++) {
+    var dr = dirs[i][0];
+    var dc = dirs[i][1];
+    var cells = [[row, col]];
+    var j = 1;
+    while (j < 4) {
+      var rr = row + dr * j;
+      var cc = col + dc * j;
+      if (rr < 0 || rr > 5 || cc < 0 || cc > 6 || c4board[rr][cc] !== p) break;
+      cells.push([rr, cc]);
+      j++;
+    }
+    j = 1;
+    while (j < 4) {
+      var rr = row - dr * j;
+      var cc = col - dc * j;
+      if (rr < 0 || rr > 5 || cc < 0 || cc > 6 || c4board[rr][cc] !== p) break;
+      cells.push([rr, cc]);
+      j++;
+    }
+    if (cells.length >= 4) return cells;
+  }
+  return null;
+}
+
+function checkC4Draw() {
+  for (var c = 0; c < 7; c++) {
+    if (c4board[0][c] === 0) return false;
+  }
+  return true;
+}
+
+// ==================== TIC TAC TOE ====================
+var tttboard = [];
+var tttplayer = 'X';
+var ttthistory = {X: [], O: []};
+var tttphase = 'place';
+var tttselected = null;
+var tttscores = {X: 0, O: 0};
+var tttover = false;
+var tttwinCells = [];
+var tttmyTurn = false;
+
+function resetTTT() {
+  tttboard = [];
+  for (var i = 0; i < 9; i++) tttboard[i] = null;
+  tttplayer = 'X';
+  ttthistory = {X: [], O: []};
+  tttphase = 'place';
+  tttselected = null;
+  tttover = false;
+  tttwinCells = [];
+  document.getElementById('tttrematch').classList.remove('show');
+  document.getElementById('tttphase').textContent = 'Place';
+  updateTTTNames();
+  drawTTT();
+  updateTTTTurn();
+}
+
+function resetTTTMultiplayer() {
+  tttboard = [];
+  for (var i = 0; i < 9; i++) tttboard[i] = null;
+  tttplayer = 'X';
+  ttthistory = {X: [], O: []};
+  tttphase = 'place';
+  tttselected = null;
+  tttover = false;
+  tttwinCells = [];
+  tttmyTurn = isHost;
+  document.getElementById('tttrematch').classList.remove('show');
+  document.getElementById('tttphase').textContent = 'Place';
+  updateTTTNames();
+  drawTTT();
+  updateTTTTurn();
+}
+
+function updateTTTNames() {
+  var xName = isMultiplayerGame ? (isHost ? playerName : peerPlayers[0].name) : 'X';
+  var oName = isMultiplayerGame ? (isHost ? peerPlayers[1].name : playerName) : 'O';
+  document.getElementById('tttname1').textContent = xName;
+  document.getElementById('tttname2').textContent = oName;
+}
+
+function drawTTT() {
+  var board = document.getElementById('tttboard');
+  board.innerHTML = '';
+  for (var i = 0; i < 9; i++) {
+    var cell = document.createElement('div');
+    cell.className = 'ttt-cell';
+    if (tttboard[i]) {
+      cell.classList.add(tttboard[i].toLowerCase());
+      cell.textContent = tttboard[i];
+    }
+    if (tttwinCells) {
+      for (var w = 0; w < tttwinCells.length; w++) {
+        if (tttwinCells[w] === i) cell.classList.add('winner');
+      }
+    }
+    if (tttselected === i) cell.classList.add('selected');
+    cell.onclick = (function(idx) {
+      return function() { clickTTT(idx); };
+    })(i);
+    board.appendChild(cell);
+  }
+}
+
+function clickTTT(index) {
+  if (tttover) return;
+  if (isMultiplayerGame && !tttmyTurn) return;
+  if (tttphase === 'place') {
+    if (!tttboard[index] && ttthistory[tttplayer].length < 3) {
+      tttboard[index] = tttplayer;
+      ttthistory[tttplayer].push(index);
+      if (isMultiplayerGame) {
+        tttmyTurn = false;
+        updateTTTFirebaseState();
+      }
+      var winResult = checkTTTWin();
+      if (winResult) {
+        tttover = true;
+        tttwinCells = winResult;
+        drawTTT();
+        var names = {
+          X: document.getElementById('tttname1').textContent,
+          O: document.getElementById('tttname2').textContent
+        };
+        showWin(names[tttplayer] + ' Wins!', '3 in a row!');
+        document.getElementById('tttrematch').classList.add('show');
+        if (isMultiplayerGame) handleTTTWin();
+        return;
+      }
+      if (ttthistory.X.length === 3 && ttthistory.O.length === 3) {
+        tttphase = 'move';
+        document.getElementById('tttphase').textContent = 'Move';
+      }
+      tttplayer = tttplayer === 'X' ? 'O' : 'X';
+      updateTTTTurn();
+      drawTTT();
+      if (isMultiplayerGame) updateTTTFirebaseState();
+    }
+  } else {
+    if (tttselected === null) {
+      if (tttboard[index] === tttplayer) {
+        tttselected = index;
+        drawTTT();
+      }
+    } else {
+      if (!tttboard[index] && isAdjacent(tttselected, index)) {
+        var prevSelected = tttselected;
+        tttboard[index] = tttplayer;
+        tttboard[tttselected] = null;
+        var idx = ttthistory[tttplayer].indexOf(tttselected);
+        ttthistory[tttplayer][idx] = index;
+        tttselected = null;
+        if (isMultiplayerGame) {
+          tttmyTurn = false;
+          updateTTTFirebaseState();
+        }
+        var winResult = checkTTTWin();
+        if (winResult) {
+          tttover = true;
+          tttwinCells = winResult;
+          drawTTT();
+          var names = {
+            X: document.getElementById('tttname1').textContent,
+            O: document.getElementById('tttname2').textContent
+          };
+          showWin(names[tttplayer] + ' Wins!', '3 in a row!');
+          document.getElementById('tttrematch').classList.add('show');
+          if (isMultiplayerGame) handleTTTWin();
+          return;
+        }
+        tttplayer = tttplayer === 'X' ? 'O' : 'X';
+        updateTTTTurn();
+        drawTTT();
+        if (isMultiplayerGame) updateTTTFirebaseState();
+      } else if (tttboard[index] === tttplayer) {
+        tttselected = index;
+        drawTTT();
+      } else {
+        tttselected = null;
+        drawTTT();
+      }
+    }
+  }
+}
+
+function updateTTTFirebaseState() {
+  if (!roomRef) return;
+  var nextPlayer = tttplayer === 'X' ? 1 : 2;
+  console.log('[MP:TTT] Writing state nextPlayer=' + nextPlayer);
+  dbUpdate(roomRef, {
+    'gameState': {
+      board: tttboard,
+      history: ttthistory,
+      phase: tttphase,
+      scores: { X: tttscores.X, O: tttscores.O },
+      lastMoveTime: Date.now()
+    },
+    'currentPlayer': nextPlayer,
+    'lastActivity': Date.now()
+  }).then(function() {
+    console.log('[MP:TTT] State written OK');
+  }).catch(function(err) {
+    console.error('[MP:TTT] State write error:', err);
+  });
+}
+function handleTTTWin() {
+  var winner = tttplayer === 'X' ? 1 : 2;
+  if (tttplayer === 'X') tttscores.X = (tttscores.X || 0) + 1;
+  else tttscores.O = (tttscores.O || 0) + 1;
+  document.getElementById('tttsx').textContent = tttscores.X;
+  document.getElementById('tttso').textContent = tttscores.O;
+  console.log('[MP:TTT] Win winner=' + winner);
+  dbUpdate(roomRef, {
+    gameState: { board: tttboard, history: ttthistory, phase: tttphase,
+      scores: { X: tttscores.X, O: tttscores.O }, lastMoveTime: Date.now() },
+    currentPlayer: winner,
+    gameEnded: { winner: winner, draw: false },
+    lastActivity: Date.now()
+  });
+  if ((winner === 1 && isHost) || (winner === 2 && !isHost)) recordWin('tictactoe');
+  else recordLoss('tictactoe');
+}
+
+function isAdjacent(from, to) {
+  var adj = {
+    0: [1, 3, 4], 1: [0, 2, 3, 4, 5], 2: [1, 4, 5],
+    3: [0, 1, 4, 6, 7], 4: [0, 1, 2, 3, 5, 6, 7, 8], 5: [1, 2, 4, 7, 8],
+    6: [3, 4, 7], 7: [3, 4, 5, 6, 8], 8: [4, 5, 7]
+  };
+  return adj[from] && adj[from].indexOf(to) !== -1;
+}
+
+function checkTTTWin() {
+  var wins = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]];
+  var result = null;
+  for (var i = 0; i < wins.length; i++) {
+    var w = wins[i];
+    var a = w[0], b = w[1], c = w[2];
+    if (tttboard[a] && tttboard[a] === tttboard[b] && tttboard[b] === tttboard[c]) {
+      result = w;
+    }
+  }
+  return result;
+}
+
+function updateTTTTurn() {
+  var el = document.getElementById('tttturn');
+  var names = {
+    X: document.getElementById('tttname1').textContent,
+    O: document.getElementById('tttname2').textContent
+  };
+  var turnName = names[tttplayer];
+  if (isMultiplayerGame && !tttmyTurn) turnName += " (Opponent's Turn)";
+  var phase = tttphase === 'place' ? 'Place piece' : 'Move piece';
+  el.textContent = turnName + ' - ' + phase;
+  el.style.color = tttplayer === 'X' ? '#ef4444' : '#60a5fa';
+}
+
+// ==================== DOTS & BOXES ====================
+var dbh = [];
+var dbv = [];
+var dbb = [];
+var dbplayer = 1;
+var dbscores = [0, 0];
+var dbover = false;
+var DBSIZE = 5;
+var dbmyTurn = false;
+
+function resetDB() {
+  dbh = [];
+  dbv = [];
+  dbb = [];
+  for (var r = 0; r < DBSIZE; r++) {
+    dbh[r] = [];
+    for (var c = 0; c < DBSIZE - 1; c++) {
+      dbh[r][c] = 0;
+    }
+  }
+  for (var r = 0; r < DBSIZE - 1; r++) {
+    dbv[r] = [];
+    for (var c = 0; c < DBSIZE; c++) {
+      dbv[r][c] = 0;
+    }
+    dbb[r] = [];
+    for (var c = 0; c < DBSIZE - 1; c++) {
+      dbb[r][c] = 0;
+    }
+  }
+  dbplayer = 1;
+  dbscores = [0, 0];
+  dbover = false;
+  document.getElementById('dbrematch').classList.remove('show');
+  updateDBNames();
+  drawDB();
+  updateDBTurn();
+}
+
+function resetDBMultiplayer() {
+  dbh = [];
+  dbv = [];
+  dbb = [];
+  for (var r = 0; r < DBSIZE; r++) {
+    dbh[r] = [];
+    for (var c = 0; c < DBSIZE - 1; c++) {
+      dbh[r][c] = 0;
+    }
+  }
+  for (var r = 0; r < DBSIZE - 1; r++) {
+    dbv[r] = [];
+    for (var c = 0; c < DBSIZE; c++) {
+      dbv[r][c] = 0;
+    }
+    dbb[r] = [];
+    for (var c = 0; c < DBSIZE - 1; c++) {
+      dbb[r][c] = 0;
+    }
+  }
+  dbplayer = 1;
+  dbscores = [0, 0];
+  dbover = false;
+  dbmyTurn = isHost;
+  document.getElementById('dbrematch').classList.remove('show');
+  updateDBNames();
+  drawDB();
+  updateDBTurn();
+}
+
+function updateDBNames() {
+  var p1 = isMultiplayerGame ? (isHost ? playerName : peerPlayers[0].name) : 'P1';
+  var p2 = isMultiplayerGame ? (isHost ? peerPlayers[1].name : playerName) : 'P2';
+  document.getElementById('dbname1').textContent = p1;
+  document.getElementById('dbname2').textContent = p2;
+}
+
+function drawDB() {
+  var container = document.getElementById('dbboard');
+  container.innerHTML = '';
+  for (var r = 0; r < DBSIZE; r++) {
+    var row1 = document.createElement('div');
+    row1.className = 'dots-row';
+    for (var c = 0; c < DBSIZE; c++) {
+      var dot = document.createElement('div');
+      dot.className = 'dot';
+      row1.appendChild(dot);
+      if (c < DBSIZE - 1) {
+        var line = document.createElement('div');
+        line.className = 'h-line';
+        if (dbh[r][c] === 1) line.classList.add('p1');
+        if (dbh[r][c] === 2) line.classList.add('p2');
+        if (!dbh[r][c]) {
+          line.onclick = (function(rr, cc) {
+            return function() { clickH(rr, cc); };
+          })(r, c);
+        }
+        row1.appendChild(line);
+      }
+    }
+    container.appendChild(row1);
+    if (r < DBSIZE - 1) {
+      var row2 = document.createElement('div');
+      row2.className = 'dots-row';
+      for (var c = 0; c < DBSIZE; c++) {
+        var line = document.createElement('div');
+        line.className = 'v-line';
+        if (dbv[r][c] === 1) line.classList.add('p1');
+        if (dbv[r][c] === 2) line.classList.add('p2');
+        if (!dbv[r][c]) {
+          line.onclick = (function(rr, cc) {
+            return function() { clickV(rr, cc); };
+          })(r, c);
+        }
+        row2.appendChild(line);
+        if (c < DBSIZE - 1) {
+          var box = document.createElement('div');
+          box.className = 'box';
+          if (dbb[r][c] === 1) box.classList.add('p1');
+          if (dbb[r][c] === 2) box.classList.add('p2');
+          row2.appendChild(box);
+        }
+      }
+      container.appendChild(row2);
+    }
+  }
+  document.getElementById('dbs1').textContent = dbscores[0];
+  document.getElementById('dbs2').textContent = dbscores[1];
+}
+
+function clickH(r, c) {
+  if (dbover) return;
+  if (isMultiplayerGame && !dbmyTurn) return;
+  if (dbh[r][c]) return;
+  dbh[r][c] = dbplayer;
+  var got = checkBoxH(r, c);
+  if (!got) dbplayer = dbplayer === 1 ? 2 : 1;
+  if (isMultiplayerGame) {
+    dbmyTurn = got;
+    updateDBFirebaseState();
+  }
+  drawDB();
+  updateDBTurn();
+  checkDBOver();
+}
+
+function clickV(r, c) {
+  if (dbover) return;
+  if (isMultiplayerGame && !dbmyTurn) return;
+  if (dbv[r][c]) return;
+  dbv[r][c] = dbplayer;
+  var got = checkBoxV(r, c);
+  if (!got) dbplayer = dbplayer === 1 ? 2 : 1;
+  if (isMultiplayerGame) {
+    dbmyTurn = got;
+    updateDBFirebaseState();
+  }
+  drawDB();
+  updateDBTurn();
+  checkDBOver();
+}
+
+function updateDBFirebaseState() {
+  if (!roomRef) return;
+  console.log('[MP:DB] Writing state player=' + dbplayer);
+  dbUpdate(roomRef, {
+    'gameState': {
+      hLines: dbh,
+      vLines: dbv,
+      boxes: dbb,
+      scores: [dbscores[0], dbscores[1]],
+      lastMoveTime: Date.now()
+    },
+    'currentPlayer': dbplayer,
+    'lastActivity': Date.now()
+  }).then(function() {
+    console.log('[MP:DB] State written OK');
+  }).catch(function(err) {
+    console.error('[MP:DB] State write error:', err);
+  });
+}
+
+function checkBoxH(r, c) {
+  var got = false;
+  if (r > 0 && dbh[r-1][c] && dbv[r-1][c] && dbv[r-1][c+1] && !dbb[r-1][c]) {
+    dbb[r-1][c] = dbplayer;
+    dbscores[dbplayer - 1] = dbscores[dbplayer - 1] + 1;
+    got = true;
+  }
+  if (r < DBSIZE - 1 && dbh[r+1][c] && dbv[r][c] && dbv[r][c+1] && !dbb[r][c]) {
+    dbb[r][c] = dbplayer;
+    dbscores[dbplayer - 1] = dbscores[dbplayer - 1] + 1;
+    got = true;
+  }
+  return got;
+}
+
+function checkBoxV(r, c) {
+  var got = false;
+  if (c > 0 && dbv[r][c-1] && dbh[r][c-1] && dbh[r+1][c-1] && !dbb[r][c-1]) {
+    dbb[r][c-1] = dbplayer;
+    dbscores[dbplayer - 1] = dbscores[dbplayer - 1] + 1;
+    got = true;
+  }
+  if (c < DBSIZE - 1 && dbv[r][c+1] && dbh[r][c] && dbh[r+1][c] && !dbb[r][c]) {
+    dbb[r][c] = dbplayer;
+    dbscores[dbplayer - 1] = dbscores[dbplayer - 1] + 1;
+    got = true;
+  }
+  return got;
+}
+
+function updateDBTurn() {
+  var e = document.getElementById('dbturn');
+  var names = [document.getElementById('dbname1').textContent, document.getElementById('dbname2').textContent];
+  var colors = ['', '#ef4444', '#fbbf24'];
+  var turnName = names[dbplayer - 1];
+  if (isMultiplayerGame && !dbmyTurn) turnName += " (Opponent's Turn)";
+  e.textContent = turnName + "'s Turn";
+  e.style.color = colors[dbplayer];
+}
+
+function checkDBOver() {
+  var total = (DBSIZE - 1) * (DBSIZE - 1);
+  if (dbscores[0] + dbscores[1] >= total) {
+    dbover = true;
+    var names = [document.getElementById('dbname1').textContent, document.getElementById('dbname2').textContent];
+    if (dbscores[0] > dbscores[1]) {
+      showWin(names[0] + ' Wins!', dbscores[0] + ' - ' + dbscores[1]);
+      if (isMultiplayerGame) handleDBWin(1);
+    } else if (dbscores[1] > dbscores[0]) {
+      showWin(names[1] + ' Wins!', dbscores[1] + ' - ' + dbscores[0]);
+      if (isMultiplayerGame) handleDBWin(2);
+    } else {
+      showWin('Draw!', dbscores[0] + ' - ' + dbscores[1]);
+      if (isMultiplayerGame) {
+        dbUpdate(roomRef, { gameEnded: { winner: 0, draw: true }, lastActivity: Date.now() });
+      }
+    }
+    document.getElementById('dbrematch').classList.add('show');
+  }
+}
+
+function handleDBWin(winner) {
+  console.log('[MP:DB] Win winner=' + winner);
+  dbUpdate(roomRef, {
+    gameState: { hLines: dbh, vLines: dbv, boxes: dbb,
+      scores: [dbscores[0], dbscores[1]], lastMoveTime: Date.now() },
+    currentPlayer: winner,
+    gameEnded: { winner: winner, draw: false },
+    lastActivity: Date.now()
+  });
+  if ((winner === 1 && isHost) || (winner === 2 && !isHost)) recordWin('dotsboxes');
+  else recordLoss('dotsboxes');
+}
+
+// ==================== MULTIPLAYER REMATCH ====================
+function rematchMultiplayer() {
+  if (!roomRef) return;
+  // Preserve scores
+  var newState = initGameState(currentGame);
+  if (currentGame === 'connect4') newState.scores = [c4scores[0], c4scores[1]];
+  else if (currentGame === 'tictactoe') newState.scores = { X: tttscores.X, O: tttscores.O };
+  else if (currentGame === 'dotsboxes') newState.scores = [dbscores[0], dbscores[1]];
+  var firstPlayer = Math.random() > 0.5 ? 1 : 2;
+  console.log('[MP] rematchMultiplayer isHost=' + isHost + ' firstPlayer=' + firstPlayer);
+  if (isHost) {
+    dbUpdate(roomRef, {
+      gameState: newState,
+      currentPlayer: firstPlayer,
+      gameEnded: null,
+      lastActivity: Date.now()
+    }).then(function() {
+      if (currentGame === 'connect4') resetC4Multiplayer();
+      else if (currentGame === 'tictactoe') resetTTTMultiplayer();
+      else if (currentGame === 'dotsboxes') resetDBMultiplayer();
+      updateTurnFromServer(firstPlayer);
+    });
+  } else {
+    // Guest just resets locally, host state will sync via listener
+    if (currentGame === 'connect4') resetC4Multiplayer();
+    else if (currentGame === 'tictactoe') resetTTTMultiplayer();
+    else if (currentGame === 'dotsboxes') resetDBMultiplayer();
+  }
+}
+
+// ==================== INIT ====================
+function initGameEngine() {
+  loadProfile();
+  navigateTo('mainMenu');
+  updateConnStatus('offline');
+}
+
+if (window.firebaseReady) {
+  initGameEngine();
+} else {
+  window.initGameEngine = initGameEngine;
+}
+</script>
+</body>
+</html>
